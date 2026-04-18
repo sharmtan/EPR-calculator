@@ -3,7 +3,24 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>EPR Intelligence</title>
+<title>EPR Intelligence — US Packaging Compliance Tool</title>
+<meta name="description" content="Free tool to calculate your EPR packaging fees, check if you're an obligated producer, and track key deadlines across Oregon, Colorado, California and 4 other US states."/>
+
+<!-- Open Graph (LinkedIn, Facebook, WhatsApp, iMessage) -->
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://sharmtan.github.io/EPR-calculator/"/>
+<meta property="og:title" content="EPR Intelligence — US Packaging Compliance Tool"/>
+<meta property="og:description" content="Am I an obligated producer? How much do I owe? Free tool covering Oregon, Colorado, California and 4 other US states — fee calculator, producer questionnaire, key deadlines."/>
+<meta property="og:image" content="https://sharmtan.github.io/EPR-calculator/preview.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="EPR Intelligence"/>
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="EPR Intelligence — US Packaging Compliance Tool"/>
+<meta name="twitter:description" content="Am I an obligated producer? How much do I owe? Free tool covering Oregon, Colorado, California and 4 more US states."/>
+<meta name="twitter:image" content="https://sharmtan.github.io/EPR-calculator/preview.png"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <style>
@@ -1882,31 +1899,21 @@ function togglePanel(bodyId,arrId){
 
 /* ══════════════ EMAIL GATE ══════════════ */
 
-/* ── GAS submit via hidden form (only reliable no-server approach) ── */
+/* ── GAS submit via image ping — works on all devices including mobile Safari ── */
 function gasSubmit(data){
   try{
-    const f=document.createElement('form');
-    f.method='POST';
-    f.action=GAS_URL;
-    f.target='gas_frame';
-    f.style.display='none';
-    Object.entries(data).forEach(([k,v])=>{
-      const i=document.createElement('input');
-      i.type='hidden';i.name=k;i.value=String(v||'');
-      f.appendChild(i);
-    });
-    // hidden iframe so page doesn't navigate
-    let fr=document.getElementById('gas_frame');
-    if(!fr){fr=document.createElement('iframe');fr.name='gas_frame';fr.style.display='none';document.body.appendChild(fr);}
-    document.body.appendChild(f);
-    f.submit();
-    setTimeout(()=>f.remove(),3000);
-    // also save to localStorage as backup
+    // Save to localStorage as local backup regardless
     try{const ex=JSON.parse(localStorage.getItem('epr_leads')||'[]');ex.push(data);localStorage.setItem('epr_leads',JSON.stringify(ex));}catch(e){}
+    // Image ping — no CORS, no iframe, works on every browser and mobile
+    const params=new URLSearchParams(Object.entries(data).map(([k,v])=>[k,String(v||'')]));
+    const img=new Image();
+    img.src=GAS_URL+'?'+params.toString();
+    // Also try fetch no-cors as secondary attempt
+    try{fetch(GAS_URL+'?'+params.toString(),{mode:'no-cors',cache:'no-store'}).catch(()=>{});}catch(e){}
   }catch(err){console.warn('gasSubmit failed',err);}
 }
 
-const GAS_URL='https://script.google.com/macros/s/AKfycbyY9bPHRBQYGxnNoKTqjFCf26hFPsfesm8wrslTS_Gc9Dzjm7wpudhjOC5ve_3kc4XE/exec';
+const GAS_URL='https://script.google.com/macros/s/AKfycbzycQq0uYGQjOyQ4jx7SXFfJt4duzw0up3VVsvzZIDXjZNJc6DXeMIHKur-KIn4WqnV/exec';
 
 let pendingResultId=null;
 function showEmailGate(resultId){
